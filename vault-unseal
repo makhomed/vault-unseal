@@ -1,4 +1,4 @@
-#!/bin/python3 -u
+#!/usr/bin/python3 -u
 
 
 __license__ = "GNU Affero General Public License, version 3.0 or later"
