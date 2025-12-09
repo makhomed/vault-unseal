@@ -1,0 +1,5 @@
+
+vault_addr = "http://localhost:8200"
+
+vault_unseal_keys = [ "vault-unseal-key-1", "vault-unseal-key-2", "vault-unseal-key-3", "vault-unseal-key-4", "vault-unseal-key-5" ]
+

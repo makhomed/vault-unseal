@@ -1,0 +1,11 @@
+#!/bin/bash
+
+for key in /etc/vault-unseal/vault-unseal-key-*.encrypted
+do
+    base=$(basename $key)
+    name=${base%.encrypted}
+    echo $name
+    systemd-creds decrypt --name=$name --tpm2-pcrs= --with-key=tpm2 $key -
+    echo
+done
+

@@ -1,0 +1,8 @@
+#!/bin/bash
+
+for key in /etc/vault-unseal/vault-unseal-key-*.encrypted
+do
+    chown root:root $key
+    chmod 0400 $key
+done
+

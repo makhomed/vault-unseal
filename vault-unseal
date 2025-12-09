@@ -1,0 +1,65 @@
+#!/bin/python3 -u
+
+
+__license__ = "GNU Affero General Public License, version 3.0 or later"
+__contact__ = "https://github.com/makhomed/vault-unseal"
+__version__ = "1.0.0"
+
+
+try:
+    import tomllib  # https://docs.python.org/3/library/tomllib.html
+except ModuleNotFoundError:
+    try:
+        import tomli as tomllib  # https://pypi.org/project/tomli/
+    except ModuleNotFoundError:
+        raise SystemExit(
+            "\nTOML [ https://toml.io/ ] parser not found.\n"
+            "\nInstall it with:\n"
+            "\n    python3 -m pip install tomli\n"
+        )
+
+from pathlib import Path
+import hvac
+import os
+import sys
+
+configuration = None
+configuration_filename = Path("/opt/vault-unseal/vault-unseal.toml")
+configuration_defaults = dict(
+    vault_addr = "http://localhost:8200",
+    vault_unseal_keys = [ "vault-unseal-key-1", "vault-unseal-key-2", "vault-unseal-key-3", "vault-unseal-key-4", "vault-unseal-key-5" ]
+)
+
+def read_configuration():
+    global configuration
+    if not configuration_filename.is_file():
+        configuration = configuration_defaults
+    else:
+        configuration = tomllib.loads(configuration_filename.read_text())
+    try:
+        configuration['credentials_directory'] = os.environ["CREDENTIALS_DIRECTORY"]
+    except KeyError:
+        sys.exit("\nCREDENTIALS_DIRECTORY environment variable not exists. Must be started as systemd service.\n")
+
+def main():
+    read_configuration()
+    credentials_directory = Path(configuration['credentials_directory'])
+    keys = list()
+    for key_name in configuration['vault_unseal_keys']:
+        key_filename = credentials_directory / key_name
+        key = key_filename.read_text().strip()
+        keys.append(key)
+    client = hvac.Client(url=configuration['vault_addr'])
+    if not client.sys.is_sealed():
+        print("Vault is already unsealed. Nothing to do.")
+        return 0
+    client.sys.submit_unseal_keys(keys=keys)
+    if client.sys.is_sealed():
+        print("ERROR: All provided unseal keys were used, but Vault is still sealed.", file=sys.stderr)
+        return 2
+    else:
+        print("Vault unsealed succesfully.")
+        return 0
+
+if __name__ == "__main__":
+    sys.exit(main())

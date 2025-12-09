@@ -1,0 +1,12 @@
+#!/bin/bash
+
+for key in /etc/vault-unseal/vault-unseal-key-*.plaintext
+do
+    base=$(basename $key)
+    name=${base%.plaintext}
+    dest=${key//.plaintext/.encrypted}
+    systemd-creds encrypt --name=$name --tpm2-pcrs= --with-key=tpm2 $key $dest
+    chown root:root $dest
+    chmod 0400 $dest
+done
+
