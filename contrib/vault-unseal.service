@@ -4,6 +4,7 @@ After=network-online.target
 Wants=network-online.target
 After=vault.service
 Wants=vault.service
+BindsTo=vault.service
 
 [Service]
 Type=oneshot
